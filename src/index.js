@@ -13,6 +13,7 @@ export default {
 
     const url = new URL(request.url);
     let targetUrl = url.searchParams.get('url');
+    const streamType = url.searchParams.get('type');
 
     // Support path style: /https://example.com/api
     if (!targetUrl) {
@@ -26,6 +27,14 @@ export default {
       return new Response("Missing target URL", { status: 400 });
     }
 
+    // Daftar fallback URL (mirror)
+    const fallbackUrls = [
+      targetUrl,
+      url.searchParams.get('backup1'),
+      url.searchParams.get('backup2'),
+      url.searchParams.get('backup3')
+    ].filter(Boolean); // hanya ambil yang ada
+
     // Clean headers
     const headers = new Headers(request.headers);
     headers.delete('host');
@@ -33,26 +42,42 @@ export default {
     headers.delete('x-forwarded-for');
     headers.delete('x-forwarded-proto');
 
-    // Paksa UA iPhone + referer/origin
+    // Custom UA/Referer
     headers.set('Referer', 'https://m.rctiplus.com/');
     headers.set('Origin', 'https://m.rctiplus.com/');
-    headers.set('User-Agent', 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_4_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile Safari/604.1');
+    if (streamType === 'mobile-stream') {
+      headers.set('User-Agent', 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_4_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile Safari/604.1');
+    } else {
+      headers.set('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)');
+    }
 
-    const modifiedRequest = new Request(targetUrl, {
-      method: request.method,
-      headers,
-      body: request.method !== 'GET' && request.method !== 'HEAD' ? await request.text() : undefined,
-      redirect: 'follow'
-    });
+    // Fungsi fetch dengan fallback
+    async function tryFetch(urls) {
+      for (const u of urls) {
+        try {
+          const req = new Request(u, {
+            method: request.method,
+            headers,
+            body: request.method !== 'GET' && request.method !== 'HEAD' ? await request.text() : undefined,
+            redirect: 'follow'
+          });
+          const res = await fetch(req);
+          if (res.ok) return res;
+        } catch (e) {
+          // lanjut ke fallback berikutnya
+        }
+      }
+      throw new Error("All sources failed");
+    }
 
     try {
-      const response = await fetch(modifiedRequest);
+      const response = await tryFetch(fallbackUrls);
 
       // Clone headers
       const newHeaders = new Headers(response.headers);
       newHeaders.set('Access-Control-Allow-Origin', '*');
 
-      // Tambahan: deteksi manifest/segmen
+      // Deteksi manifest/segmen
       if (targetUrl.endsWith('.m3u8')) {
         newHeaders.set('Content-Type', 'application/vnd.apple.mpegurl');
         newHeaders.set('Cache-Control', 'no-cache');
@@ -71,7 +96,19 @@ export default {
         headers: newHeaders
       });
     } catch (e) {
-      return new Response("Error fetching stream: " + e.message, { status: 500 });
+      return new Response("Error fetching stream: " + e.message, { status: 502 });
     }
   }
 };
+
+
+
+Cara pakai:
+- Panggil proxy dengan query ?url=...&backup1=...&backup2=...  
+- Jika url gagal, otomatis coba backup1, lalu backup2, dst.  
+- Cocok untuk HLS/DASH karena manifest .m3u8 dan segmen .ts akan tetap di-serve dengan header yang benar.  
+
+👉 Dengan ini kamu bisa bikin multi-level failover langsung di proxy, tanpa harus mengandalkan player saja.  
+
+
+  
