@@ -101,14 +101,3 @@ export default {
   }
 };
 
-
-
-Cara pakai:
-- Panggil proxy dengan query ?url=...&backup1=...&backup2=...  
-- Jika url gagal, otomatis coba backup1, lalu backup2, dst.  
-- Cocok untuk HLS/DASH karena manifest .m3u8 dan segmen .ts akan tetap di-serve dengan header yang benar.  
-
-👉 Dengan ini kamu bisa bikin multi-level failover langsung di proxy, tanpa harus mengandalkan player saja.  
-
-
-  
