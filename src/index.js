@@ -43,12 +43,12 @@ export default {
     headers.delete('x-forwarded-proto');
 
     // Custom UA/Referer
-    headers.set('Referer', 'https://m.rctiplus.com/');
-    headers.set('Origin', 'https://m.rctiplus.com/');
+    headers.set('Referer', 'https://pulse1.zalmora1.cfd/000/');
+    headers.set('Origin', 'https://kuk1.modprimus1.cfd/000/');
     if (streamType === 'mobile-stream') {
       headers.set('User-Agent', 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_4_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile Safari/604.1');
     } else {
-      headers.set('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)');
+      headers.set('User-Agent', 'Mozilla/5.0 (iPhone14,6; U; CPU iPhone OS 15_4 like Mac OS X) AppleWebKit/602.1.50 (KHTML, like Gecko) Version/10.0 Mobile/19E241 Safari/602.1;
     }
 
     // Fungsi fetch dengan fallback
