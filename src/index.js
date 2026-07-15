@@ -43,8 +43,8 @@ export default {
     headers.delete('x-forwarded-proto');
 
     // Custom UA/Referer
-    headers.set('Referer', 'https://pulse1.zalmora1.cfd/000/');
-    headers.set('Origin', 'https://kuk1.modprimus1.cfd/000/');
+    headers.set('Referer', 'https://indihometv.id/');
+    headers.set('Origin', 'https://indihometv.id/');
     if (streamType === 'mobile-stream') {
       headers.set('User-Agent', 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_4_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile Safari/604.1');
     } else {
